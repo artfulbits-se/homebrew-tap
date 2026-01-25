@@ -17,6 +17,15 @@ class EBash < Formula
   end
 
   def install
+    # Prepare documentation: promote docs/public to docs
+    mv "docs/public", "docs_new"
+    rm_rf "docs"
+    mv "docs_new", "docs"
+
+    # Remove development artifacts
+    rm "COPYRIGHT"
+    rm_rf %w[AGENTS.md CLAUDE.md codecov.yml patches spec]
+
     # Install everything to libexec to preserve structure
     libexec.install Dir["*"]
     libexec.install ".scripts" if Dir.exist?(".scripts")
