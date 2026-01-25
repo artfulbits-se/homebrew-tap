@@ -8,10 +8,13 @@ class EBash < Formula
   depends_on "bash"
   depends_on "coreutils"
   depends_on "git"
-  depends_on "gawk"
-  depends_on "gnu-sed"
-  depends_on "grep"
   depends_on "jq"
+  
+  on_macos do
+    depends_on "gawk"
+    depends_on "gnu-sed"
+    depends_on "grep"
+  end
 
   def install
     # Install everything to libexec to preserve structure
