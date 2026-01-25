@@ -5,8 +5,7 @@ This is the official Homebrew tap for [e-bash](https://github.com/OleksandrKuche
 ## Installation
 
 ```bash
-brew tap artfulbits-se/tap
-brew install e-bash
+brew install artfulbits-se/tap/e-bash
 ```
 
 ## Documentation
