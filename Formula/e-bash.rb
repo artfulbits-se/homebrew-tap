@@ -8,6 +8,18 @@ class EBash < Formula
   bottle :unneeded
 
   depends_on "bash"
+  depends_on "coreutils"
+  depends_on "direnv"
+  depends_on "gawk"
+  depends_on "git"
+  depends_on "git-lfs"
+  depends_on "gnu-sed"
+  depends_on "grep"
+  depends_on "jq"
+  depends_on "lefthook"
+  depends_on "shellcheck"
+  depends_on "shellspec"
+  depends_on "shfmt"
 
   def install
     # Install core scripts to libexec (private)
