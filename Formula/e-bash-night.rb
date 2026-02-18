@@ -60,6 +60,13 @@ class EBashNight < Formula
 
       E_BASH_HOME="$HOME/.e-bash"
 
+      # Handle --force-init flag (for reinstall)
+      if [ "$1" = "--force-init" ]; then
+          echo "Removing existing ~/.e-bash..."
+          rm -rf "$E_BASH_HOME"
+          shift
+      fi
+
       # Initialize ~/.e-bash if not exists using official installer
       if [ ! -d "$E_BASH_HOME/.git" ] || [ ! -d "$E_BASH_HOME/.scripts" ]; then
           curl -sSL https://git.new/e-bash | bash -s -- --global install master
@@ -73,7 +80,7 @@ class EBashNight < Formula
 
   def caveats
     <<~EOS
-      ⚠️  Run this command to complete installation and see the available versions:
+      ⚠️  Run this command to complete installation:
         e-bash versions
 
       This initializes ~/.e-bash and upgrades to latest master.
@@ -81,6 +88,9 @@ class EBashNight < Formula
       On first run, the installer will add these lines to your shell profile:
         export E_BASH="$HOME/.e-bash/.scripts"
         export PATH="$HOME/.e-bash/bin:$PATH"
+
+      To force reinstallation (after brew reinstall):
+        e-bash --force-init versions
 
       To upgrade to latest development version:
         e-bash --global upgrade latest
