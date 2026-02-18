@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
-class EBash < Formula
-  desc "Comprehensive Bash script enhancement framework"
+class EBashNight < Formula
+  desc "Comprehensive Bash script enhancement framework (nightly/latest)"
   homepage "https://github.com/OleksandrKucherenko/e-bash"
   url "https://github.com/OleksandrKucherenko/e-bash/archive/refs/tags/v2.0.0.tar.gz"
+  version "2.0.0-nightly"
   sha256 "b5ce1c797750ed0c1533665bc48650266cdd991c259399412a3afe0f6bd7f69b"
   license "MIT"
 
@@ -34,8 +35,8 @@ class EBash < Formula
     rm_rf e_bash_home / ".claude"
     rm_rf e_bash_home / ".clavix"
     rm_rf e_bash_home / ".github"
-    rm_rf e_bash_home / ".idea"
     rm_rf e_bash_home / ".lefthook"
+    rm_rf e_bash_home / ".idea"
     rm_rf e_bash_home / ".secrets"
     rm_rf e_bash_home / ".vscode"
     rm_rf e_bash_home / ".worktrees"
@@ -71,7 +72,7 @@ class EBash < Formula
       system "git", "config", "user.email", "homebrew@local"
       system "git", "config", "user.name", "Homebrew"
       system "git", "add", "."
-      system "git", "commit", "-m", "Installed via Homebrew"
+      system "git", "commit", "-m", "Installed via Homebrew (nightly)"
       system "git", "remote", "add", "e-bash",
              "https://github.com/OleksandrKucherenko/e-bash.git"
       system "git", "fetch", "e-bash", "--tags"
@@ -88,20 +89,22 @@ class EBash < Formula
       exec "$HOME/.e-bash/bin/install.e-bash.sh" "$@"
     EOS
     chmod 0755, bin / "e-bash"
+
+    # Upgrade to latest (nightly) version after installation
+    system "#{bin}/e-bash", "--global", "upgrade", "latest"
   end
 
   def caveats
     <<~EOS
-      e-bash is installed to ~/.e-bash (global installation mode).
+      e-bash nightly is installed to ~/.e-bash and upgraded to the latest master.
 
       Add to your shell profile:
         export E_BASH="$HOME/.e-bash/.scripts"
         export PATH="$HOME/.e-bash/bin:$PATH"
 
-      To upgrade to latest development version:
-        e-bash --global upgrade latest
+      This formula automatically upgrades to the latest development version.
 
-      Switch to a specific version:
+      To switch to a stable version:
         e-bash --global upgrade v2.0.0
 
       To list available versions:
