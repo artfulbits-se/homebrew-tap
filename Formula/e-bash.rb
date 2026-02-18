@@ -52,38 +52,21 @@ class EBash < Formula
     ].compact
 
     # Create 'e-bash' convenience command
-    # On first run, initializes ~/.e-bash from libexec, then delegates to it
+    # On first run, uses official installer to set up ~/.e-bash
     (bin / "e-bash").write <<~EOS
       #!/bin/bash
 
       E_BASH_HOME="$HOME/.e-bash"
-      LIBEXEC="#{libexec}"
 
-      # Initialize ~/.e-bash if not exists
+      # Initialize ~/.e-bash if not exists using official installer
       if [ ! -d "$E_BASH_HOME/.git" ] || [ ! -d "$E_BASH_HOME/.scripts" ]; then
           echo "Initializing e-bash to ~/.e-bash..."
-          mkdir -p "$E_BASH_HOME/.versions"
-          cp -r "$LIBEXEC/"* "$E_BASH_HOME/" 2>/dev/null || true
-          [ -d "$LIBEXEC/.scripts" ] && cp -r "$LIBEXEC/.scripts" "$E_BASH_HOME/" 2>/dev/null || true
-
-          # Create .gitignore
-          cat > "$E_BASH_HOME/.gitignore" << 'GITIGNORE'
-      # exclude .versions worktree folder from git
-      .versions/
-      GITIGNORE
-
-          # Initialize git repo
-          cd "$E_BASH_HOME"
-          git init -q -b master
-          git config user.email "homebrew@local" 2>/dev/null || true
-          git config user.name "Homebrew" 2>/dev/null || true
-          git add -A 2>/dev/null
-          git commit -q -m "Installed via Homebrew" 2>/dev/null || true
-          git remote add origin https://github.com/OleksandrKucherenko/e-bash.git 2>/dev/null || true
-          git fetch -q origin --tags 2>/dev/null || true
-          git branch --set-upstream-to=origin/master master 2>/dev/null || true
-
-          echo "e-bash initialized."
+          echo ""
+          curl -sSL https://git.new/e-bash | bash -s -- --global install v2.0.0
+          echo ""
+          echo "✅ e-bash installed! Add to your shell profile:"
+          echo "   export E_BASH=\"\\$HOME/.e-bash/.scripts\""
+          echo "   export PATH=\"\\$HOME/.e-bash/bin:\\$PATH\""
           echo ""
       fi
 
