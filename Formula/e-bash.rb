@@ -11,6 +11,7 @@ class EBash < Formula
   depends_on "coreutils"
   depends_on "git"
   depends_on "jq"
+  depends_on "curl"
 
   on_macos do
     depends_on "gawk"
@@ -60,14 +61,7 @@ class EBash < Formula
 
       # Initialize ~/.e-bash if not exists using official installer
       if [ ! -d "$E_BASH_HOME/.git" ] || [ ! -d "$E_BASH_HOME/.scripts" ]; then
-          echo "Initializing e-bash to ~/.e-bash..."
-          echo ""
           curl -sSL https://git.new/e-bash | bash -s -- --global install v2.0.0
-          echo ""
-          echo "✅ e-bash installed! Add to your shell profile:"
-          echo "   export E_BASH=\"\\$HOME/.e-bash/.scripts\""
-          echo "   export PATH=\"\\$HOME/.e-bash/bin:\\$PATH\""
-          echo ""
       fi
 
       # Delegate to the install script in ~/.e-bash
@@ -83,7 +77,7 @@ class EBash < Formula
 
       This initializes ~/.e-bash and shows available versions.
 
-      Then add to your shell profile:
+      On first run, the installer will add these lines to your shell profile:
         export E_BASH="$HOME/.e-bash/.scripts"
         export PATH="$HOME/.e-bash/bin:$PATH"
 
@@ -96,6 +90,6 @@ class EBash < Formula
   end
 
   test do
-    assert_predicate libexec / ".scripts/_logger.sh", :exist?
+    assert_path_exists libexec / ".scripts/_logger.sh"
   end
 end
