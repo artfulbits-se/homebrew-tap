@@ -20,99 +20,100 @@ class EBashNight < Formula
   end
 
   def install
-    # Install to ~/.e-bash (matches install script --global mode)
-    e_bash_home = Pathname.new(Dir.home) / ".e-bash"
-
-    # Create directory structure
-    e_bash_home.mkpath
-    (e_bash_home / ".versions").mkpath
-
-    # Install all files to ~/.e-bash
-    e_bash_home.install Dir["*"]
-    e_bash_home.install ".scripts" if Dir.exist?(".scripts")
+    # Install everything to libexec (Homebrew standard location)
+    libexec.install Dir["*"]
+    libexec.install ".scripts" if Dir.exist?(".scripts")
 
     # Remove development artifacts to save space
-    rm_rf e_bash_home / ".claude"
-    rm_rf e_bash_home / ".clavix"
-    rm_rf e_bash_home / ".github"
-    rm_rf e_bash_home / ".lefthook"
-    rm_rf e_bash_home / ".idea"
-    rm_rf e_bash_home / ".secrets"
-    rm_rf e_bash_home / ".vscode"
-    rm_rf e_bash_home / ".worktrees"
-    rm_rf e_bash_home / "patches"
-    rm_rf e_bash_home / "report"
-    rm_rf e_bash_home / "spec"
+    rm_rf libexec / ".claude"
+    rm_rf libexec / ".clavix"
+    rm_rf libexec / ".github"
+    rm_rf libexec / ".lefthook"
+    rm_rf libexec / ".idea"
+    rm_rf libexec / ".secrets"
+    rm_rf libexec / ".vscode"
+    rm_rf libexec / ".worktrees"
+    rm_rf libexec / "patches"
+    rm_rf libexec / "report"
+    rm_rf libexec / "spec"
     rm_rf [
-      e_bash_home / ".codecov.yml",
-      e_bash_home / ".editorconfig",
-      e_bash_home / ".edocsrc",
-      e_bash_home / ".env.secrets.json",
-      e_bash_home / ".lefthook.yml",
-      e_bash_home / ".mailmap",
-      e_bash_home / ".prompts.md",
-      e_bash_home / ".shellcheckrc",
-      e_bash_home / ".shellspec",
-      e_bash_home / ".shellspec-quick.log",
-      e_bash_home / "AGENTS.md",
-      e_bash_home / "CLAUDE.md",
-      e_bash_home / "mise.toml"
+      libexec / ".codecov.yml",
+      libexec / ".editorconfig",
+      libexec / ".edocsrc",
+      libexec / ".env.secrets.json",
+      libexec / ".lefthook.yml",
+      libexec / ".mailmap",
+      libexec / ".prompts.md",
+      libexec / ".shellcheckrc",
+      libexec / ".shellspec",
+      libexec / ".shellspec-quick.log",
+      libexec / "AGENTS.md",
+      libexec / "CLAUDE.md",
+      libexec / "mise.toml"
     ].compact
 
-    # Create .gitignore to exclude .versions/ (as install script does)
-    File.write(e_bash_home / ".gitignore", <<~EOS
-      # exclude .versions worktree folder from git
-      .versions/
-    EOS
-    )
-
-    # Initialize git repo (required for install script detection)
-    Dir.chdir e_bash_home do
-      system "git", "init"
-      system "git", "config", "user.email", "homebrew@local"
-      system "git", "config", "user.name", "Homebrew"
-      system "git", "add", "."
-      system "git", "commit", "-m", "Installed via Homebrew (nightly)"
-      system "git", "remote", "add", "e-bash",
-             "https://github.com/OleksandrKucherenko/e-bash.git"
-      system "git", "fetch", "e-bash", "--tags"
-    end
-
-    # Symlink binaries to Homebrew bin
-    bin.install_symlink Dir[e_bash_home / "bin/*"]
-
-    # Create 'e-bash' convenience command pointing to install script
-    # Allows: e-bash --global upgrade latest
-    # Note: Use $HOME at runtime, not build-time path
+    # Create 'e-bash' convenience command
+    # On first run, initializes ~/.e-bash from libexec, then delegates to it
     (bin / "e-bash").write <<~EOS
       #!/bin/bash
-      exec "$HOME/.e-bash/bin/install.e-bash.sh" "$@"
+
+      E_BASH_HOME="$HOME/.e-bash"
+      LIBEXEC="#{libexec}"
+
+      # Initialize ~/.e-bash if not exists
+      if [ ! -d "$E_BASH_HOME/.git" ] || [ ! -d "$E_BASH_HOME/.scripts" ]; then
+          echo "Initializing e-bash to ~/.e-bash..."
+          mkdir -p "$E_BASH_HOME/.versions"
+          cp -r "$LIBEXEC/"* "$E_BASH_HOME/" 2>/dev/null || true
+          [ -d "$LIBEXEC/.scripts" ] && cp -r "$LIBEXEC/.scripts" "$E_BASH_HOME/" 2>/dev/null || true
+
+          # Create .gitignore
+          cat > "$E_BASH_HOME/.gitignore" << 'GITIGNORE'
+      # exclude .versions worktree folder from git
+      .versions/
+      GITIGNORE
+
+          # Initialize git repo
+          cd "$E_BASH_HOME"
+          git init -q -b master
+          git config user.email "homebrew@local" 2>/dev/null || true
+          git config user.name "Homebrew" 2>/dev/null || true
+          git add -A 2>/dev/null
+          git commit -q -m "Installed via Homebrew (nightly)" 2>/dev/null || true
+          git remote add origin https://github.com/OleksandrKucherenko/e-bash.git 2>/dev/null || true
+          git fetch -q origin --tags 2>/dev/null || true
+          git branch --set-upstream-to=origin/master master 2>/dev/null || true
+
+          echo "e-bash initialized. Upgrading to latest master..."
+          "$E_BASH_HOME/bin/install.e-bash.sh" --global --force upgrade latest 2>/dev/null || echo "Upgrade skipped (network issue or already up to date)"
+          echo ""
+      fi
+
+      # Delegate to the install script in ~/.e-bash
+      exec "$E_BASH_HOME/bin/install.e-bash.sh" "$@"
     EOS
     chmod 0755, bin / "e-bash"
-
-    # Upgrade to latest (nightly) version after installation
-    system "#{bin}/e-bash", "--global", "upgrade", "latest"
   end
 
   def caveats
     <<~EOS
-      e-bash nightly is installed to ~/.e-bash and upgraded to the latest master.
+      e-bash nightly installs to ~/.e-bash on first run.
 
       Add to your shell profile:
         export E_BASH="$HOME/.e-bash/.scripts"
         export PATH="$HOME/.e-bash/bin:$PATH"
 
-      This formula automatically upgrades to the latest development version.
+      Run 'e-bash versions' to initialize and see available versions.
+
+      To upgrade to latest development version:
+        e-bash --global upgrade latest
 
       To switch to a stable version:
         e-bash --global upgrade v2.0.0
-
-      To list available versions:
-        e-bash versions
     EOS
   end
 
   test do
-    assert_path_exists Dir.home / ".e-bash/.scripts/_logger.sh"
+    assert_predicate libexec / ".scripts/_logger.sh", :exist?
   end
 end
