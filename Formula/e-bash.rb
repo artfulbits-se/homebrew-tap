@@ -95,13 +95,14 @@ class EBash < Formula
 
   def caveats
     <<~EOS
-      e-bash installs to ~/.e-bash on first run.
+      ⚠️  Run this command to complete installation:
+        e-bash versions
 
-      Add to your shell profile:
+      This initializes ~/.e-bash and shows available versions.
+
+      Then add to your shell profile:
         export E_BASH="$HOME/.e-bash/.scripts"
         export PATH="$HOME/.e-bash/bin:$PATH"
-
-      Run 'e-bash versions' to initialize and see available versions.
 
       To upgrade to latest development version:
         e-bash --global upgrade latest
